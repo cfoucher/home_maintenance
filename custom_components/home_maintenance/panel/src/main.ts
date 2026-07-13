@@ -159,30 +159,28 @@ export class HomeMaintenancePanel extends LitElement {
               `,
             },
             actions: {
-                title: "",
-                label: "actions",
+                title: "", // no header in column
+                width: "80px",
                 showNarrow: true,
-                moveable: false,
-                hideable: false,
-                type: "overflow-menu",
-                template: (task: Task) => html`
-                    <hm-task-menu
-                        .hass=${this.hass}
-                        .items=${[
-                        {
-                            value: 'edit',
-                            label: localize('panel.cards.current.actions.edit', this.hass!.language),
-                            icon: 'mdi:pencil'
-                        },
-                        {
-                            value: 'delete',
-                            label: localize('panel.cards.current.actions.remove', this.hass!.language),
-                            icon: 'mdi:delete'
-                        }
-                    ]}
-                    @menu-action=${(e: CustomEvent) => this._handleMenuAction(e, task.id)}
-                    ></hm-task-menu>
-                `,
+                template: (task: Task) => {
+                    return html`
+                    <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+                        <ha-icon-button
+                            .title=${localize('panel.cards.current.actions.edit', this.hass!.language)}
+                            .path=${mdiPencil}
+                            @click=${() => this._handleOpenEditDialogClick(task.id)}
+                        >
+                        </ha-icon-button>
+                        <ha-icon-button
+                            .title=${localize('panel.cards.current.actions.remove', this.hass!.language)}
+                            .path=${mdiDelete}
+                            @click=${() => this._handleRemoveTaskClick(task.id)}
+                            style="color: var(--error-color);"
+                        >
+                        </ha-icon-button>
+                    </div>
+                `;
+                }
             },
         }
     };
@@ -270,7 +268,9 @@ export class HomeMaintenancePanel extends LitElement {
     };
 
     private get _editSchema() {
+        
         return [
+            { name: "title", selector: { text: {} }, },
             { name: "interval_value", required: true, selector: { number: { min: 1, mode: "box" } }, },
             {
                 name: "interval_type",
