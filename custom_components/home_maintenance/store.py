@@ -29,6 +29,7 @@ class HomeMaintenanceTask:
     last_performed: str = attr.ib()
     tag_id: str | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
+    description: str = attr.ib(default=None)
 
 
 class TaskStore:
