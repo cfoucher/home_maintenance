@@ -8,6 +8,8 @@ __pycache__
 # Typescript
 custom_components/home_maintenance/panel/node_modules
 package-lock.json
+# but the panel's lockfile must be tracked so the release workflow can `npm ci`
+!custom_components/home_maintenance/panel/package-lock.json
 
 
 # misc
