@@ -13,6 +13,17 @@ jobs:
         id: version
         uses: home-assistant/actions/helpers/version@master
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build panel
+        working-directory: custom_components/home_maintenance/panel
+        run: |
+          npm ci
+          npm run build
+
       - name: Patch manifest and zip
         run: |
           sed -i 's/v0.0.0/${{ steps.version.outputs.version }}/' custom_components/home_maintenance/manifest.json
