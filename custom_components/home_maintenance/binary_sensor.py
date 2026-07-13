@@ -1,10 +1,10 @@
 """Support for Home Maintenance binary sensors."""
 
 import logging
-from datetime import datetime, timedelta
 
-from dateutil.relativedelta import relativedelta
 from homeassistant.components.binary_sensor import BinarySensorEntity
+
+from .schedule import calculate_next_due
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -74,19 +74,6 @@ class HomeMaintenanceSensor(BinarySensorEntity):
         """Return the icon for the task."""
         return self.task.get("icon", "mdi:calendar-check")
 
-    def _calculate_next_due(
-        self, last_performed: datetime, interval_value: int, interval_type: str
-    ) -> datetime:
-        """Calculate the next date based on last date and interval."""
-        if interval_type == "days":
-            return last_performed + timedelta(days=interval_value)
-        if interval_type == "weeks":
-            return last_performed + timedelta(weeks=interval_value)
-        if interval_type == "months":
-            return last_performed + relativedelta(months=interval_value)
-
-        return last_performed
-
     def _update_state(self) -> None:
         """Get the latest state of the sensor."""
         last = dt_util.parse_datetime(self.task["last_performed"])
@@ -107,7 +94,7 @@ class HomeMaintenanceSensor(BinarySensorEntity):
 
         interval_value = self.task["interval_value"]
         interval_type = self.task["interval_type"]
-        due_date = self._calculate_next_due(
+        due_date = calculate_next_due(
             last, interval_value, interval_type
         ).replace(hour=0, minute=0, second=0, microsecond=0)
 
