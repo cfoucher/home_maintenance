@@ -3,8 +3,6 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-
-from .schedule import calculate_next_due
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import const
+from .schedule import calculate_next_due
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +93,9 @@ class HomeMaintenanceSensor(BinarySensorEntity):
 
         interval_value = self.task["interval_value"]
         interval_type = self.task["interval_type"]
-        due_date = calculate_next_due(
-            last, interval_value, interval_type
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        due_date = calculate_next_due(last, interval_value, interval_type).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         self._attr_is_on = (
             dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0) >= due_date
