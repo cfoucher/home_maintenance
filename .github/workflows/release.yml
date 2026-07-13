@@ -1,6 +1,18 @@
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to build (e.g. v1.6.0). Leave blank to use the latest tag.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -8,10 +20,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,13 +45,14 @@ jobs:
 
       - name: Patch manifest and zip
         run: |
-          sed -i 's/v0.0.0/${{ steps.version.outputs.version }}/' custom_components/home_maintenance/manifest.json
-
+          sed -i "s/v0.0.0/${{ steps.version.outputs.version }}/" custom_components/home_maintenance/manifest.json
           cd custom_components/home_maintenance/
           zip ../../home_maintenance.zip ./* translations/* panel/dist/* -x '.*'
+
       - name: Upload ZIP to Release
         uses: softprops/action-gh-release@v2
         with:
           files: home_maintenance.zip
+          tag_name: ${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
