@@ -6,6 +6,10 @@ Try polyfilling it using "@formatjs/intl-pluralrules"
     :host {
         color: var(--primary-text-color);
         background: var(--lovelace-background, var(--primary-background-color));
+        /* Establish a positioning context so the dialog can use position: absolute
+           instead of the default position: fixed (which covers the full viewport
+           and centers on the viewport, not on the Current Tasks card). */
+        position: relative;
     }
 
     .header {
@@ -182,20 +186,24 @@ Try polyfilling it using "@formatjs/intl-pluralrules"
 
     ha-dialog {
         --mdc-dialog-min-width: 600px;
-        /* Constrain the dialog content width and let the inner surface
-           center via part(dialog) margin: auto.
-           The --mdc-dialog-* variables are respected by @material/mwc-dialog
-           which ha-dialog wraps. The ::part(dialog) selector targets the
-           inner .mdc-dialog__surface element to center it horizontally. */
         --mdc-dialog-max-width: 90vw;
+        /* Override MWC's default position: fixed (covers viewport, center = viewport center)
+           with position: absolute (covers the :host, center = host center = Current Tasks card
+           center). The ::part(scrim) override below handles the MWC's internal shadow DOM
+           scrim element which defaults to position: fixed. */
+        position: absolute !important;
+        inset: 0 !important;
     }
 
-    /* Center the dialog surface within the viewport.
-       The dialog was offset to the left because its internal
-       left: 50%; transform: translateX(-50%) positioning
-       misaligns in this component's layout context. */
-    ha-dialog::part(dialog) {
-        margin: 0 auto;
+    /* Target the scrim inside MWC dialog's shadow DOM.
+       This overrides the default position: fixed (viewport-relative)
+       with position: absolute (host-relative). Combined with the
+       :host { position: relative; } above, the scrim fills the host
+       element's box, so the dialog surface centers on the host =
+       the Current Tasks card. */
+    ha-dialog::part(scrim) {
+        position: absolute !important;
+        inset: 0 !important;
     }
 
     @media (max-width: 600px) {

@@ -285,24 +285,71 @@ def test_localization_keys_match():
 # ---------------------------------------------------------------------------
 
 def test_dialog_centering_css_present():
-    """styles.ts must have CSS that centers the ha-dialog in the viewport.
+    """styles.ts must have CSS that centers the ha-dialog on the host panel.
 
     At least one of the following must be present:
-      - ::part(dialog) selector with margin centering
+      - position: absolute on ha-dialog (v1.7.4 approach — constrains to :host)
+      - ::part(scrim) selector with positioning (v1.7.4 fallback)
+      - ::part(dialog) selector with margin centering (v1.7.3 approach)
       - --mdc-dialog-* custom property related to sizing
-      - position: fixed on ha-dialog
     """
     styles_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "src" / "styles.ts"
     source = styles_path.read_text(encoding="utf-8")
 
+    has_position_absolute = bool(re.search(
+        r"ha-dialog\s*\{[^}]*position\s*:\s*absolute\s*!important",
+        source, re.DOTALL,
+    ))
+    has_part_scrim = "::part(scrim)" in source
     has_part_dialog = "::part(dialog)" in source
     has_mdc_sizing = bool(re.search(r"--mdc-dialog-(min|max|content)-width", source))
-    has_position_fixed = bool(re.search(r"ha-dialog\s*\{[^}]*position\s*:\s*fixed", source, re.DOTALL))
 
-    assert has_part_dialog or has_mdc_sizing or has_position_fixed, (
+    assert has_position_absolute or has_part_scrim or has_part_dialog or has_mdc_sizing, (
         "No dialog centering CSS found in styles.ts. "
-        "Expected at least one of: ::part(dialog), --mdc-dialog-* sizing, "
-        "or position: fixed on ha-dialog."
+        "Expected at least one of: position:absolute on ha-dialog, "
+        "::part(scrim), ::part(dialog), or --mdc-dialog-* sizing."
+    )
+
+
+def test_dialog_centering_uses_position_absolute():
+    """styles.ts must use position: absolute on ha-dialog to constrain the
+    dialog to the :host element (so it centers on the Current Tasks card
+    rather than the viewport).
+
+    This is the v1.7.4 approach. The fallback check also allows
+    ::part(scrim) { position: absolute } if the outer ha-dialog
+    override doesn't penetrate MWC's shadow DOM on its own.
+    """
+    styles_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "src" / "styles.ts"
+    source = styles_path.read_text(encoding="utf-8")
+
+    # Check 1: position: absolute on ha-dialog host
+    has_host_absolute = bool(re.search(
+        r"ha-dialog\s*\{[^}]*position\s*:\s*absolute\s*!important",
+        source, re.DOTALL,
+    ))
+
+    # Check 2: ::part(scrim) with position: absolute
+    has_scrim_absolute = bool(re.search(
+        r"::part\(scrim\)\s*\{[^}]*position\s*:\s*absolute\s*!important",
+        source, re.DOTALL,
+    ))
+
+    # Check 3: :host has position: relative (required positioning context)
+    has_host_relative = bool(re.search(
+        r":host\s*\{[^}]*position\s*:\s*relative",
+        source, re.DOTALL,
+    ))
+
+    assert has_host_absolute or has_scrim_absolute, (
+        "No position:absolute found for dialog centering. "
+        "Expected at least one of: ha-dialog { position: absolute !important; } "
+        "or ::part(scrim) { position: absolute !important; } "
+        "to constrain the dialog to the :host rather than the viewport."
+    )
+    assert has_host_relative, (
+        ":host must have position: relative to act as a positioning "
+        "context for the absolute-positioned dialog."
     )
 
 
