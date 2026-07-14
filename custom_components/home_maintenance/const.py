@@ -4,7 +4,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import config_validation as cv
 
-VERSION = "1.7.4"
+VERSION = "1.7.5"
 NAME = "Home Maintenance"
 MANUFACTURER = "@TJPoorman"
 

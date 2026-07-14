@@ -4,11 +4,12 @@ var r2=Object.defineProperty;var m5=Object.getOwnPropertyDescriptor;var e2=(C,H)
 Try polyfilling it using "@formatjs/intl-pluralrules"
 `,U.MISSING_INTL_API,e);var _=V.getPluralRules(H,{type:o.pluralType}).select(d-(o.offset||0));s=o.options[_]||o.options.other}if(!s)throw new Y1(o.value,d,Object.keys(o.options),e);t.push.apply(t,i1(s.value,H,V,L,M,d-(o.offset||0)));continue}}return a3(t)}function d3(C,H){return H?p(p(p({},C||{}),H||{}),Object.keys(C).reduce(function(V,L){return V[L]=p(p({},C[L]),H[L]||{}),V},{})):C}function m3(C,H){return H?Object.keys(C).reduce(function(V,L){return V[L]=d3(C[L],H[L]),V},p({},C)):C}function J1(C){return{create:function(){return{get:function(H){return C[H]},set:function(H,V){C[H]=V}}}}}function n3(C){return C===void 0&&(C={number:{},dateTime:{},pluralRules:{}}),{getNumberFormat:e1(function(){for(var H,V=[],L=0;L<arguments.length;L++)V[L]=arguments[L];return new((H=Intl.NumberFormat).bind.apply(H,x1([void 0],V,!1)))},{cache:J1(C.number),strategy:O1.variadic}),getDateTimeFormat:e1(function(){for(var H,V=[],L=0;L<arguments.length;L++)V[L]=arguments[L];return new((H=Intl.DateTimeFormat).bind.apply(H,x1([void 0],V,!1)))},{cache:J1(C.dateTime),strategy:O1.variadic}),getPluralRules:e1(function(){for(var H,V=[],L=0;L<arguments.length;L++)V[L]=arguments[L];return new((H=Intl.PluralRules).bind.apply(H,x1([void 0],V,!1)))},{cache:J1(C.pluralRules),strategy:O1.variadic})}}var C5=(function(){function C(H,V,L,M){var r=this;if(V===void 0&&(V=C.defaultLocale),this.formatterCache={number:{},dateTime:{},pluralRules:{}},this.format=function(e){var t=r.formatToParts(e);if(t.length===1)return t[0].value;var i=t.reduce(function(a,o){return!a.length||o.type!==c.literal||typeof a[a.length-1]!="string"?a.push(o.value):a[a.length-1]+=o.value,a},[]);return i.length<=1?i[0]||"":i},this.formatToParts=function(e){return i1(r.ast,r.locales,r.formatters,r.formats,e,void 0,r.message)},this.resolvedOptions=function(){return{locale:r.resolvedLocale.toString()}},this.getAst=function(){return r.ast},this.locales=V,this.resolvedLocale=C.resolveLocale(V),typeof H=="string"){if(this.message=H,!C.__parse)throw new TypeError("IntlMessageFormat.__parse must be set to process `message` of type `string`");this.ast=C.__parse(H,{ignoreTag:M?.ignoreTag,locale:this.resolvedLocale})}else this.ast=H;if(!Array.isArray(this.ast))throw new TypeError("A message must be provided as a String or AST.");this.formats=m3(C.formats,L),this.formatters=M&&M.formatters||n3(this.formatterCache)}return Object.defineProperty(C,"defaultLocale",{get:function(){return C.memoizedDefaultLocale||(C.memoizedDefaultLocale=new Intl.NumberFormat().resolvedOptions().locale),C.memoizedDefaultLocale},enumerable:!1,configurable:!0}),C.memoizedDefaultLocale=null,C.resolveLocale=function(H){var V=Intl.NumberFormat.supportedLocalesOf(H);return V.length>0?new Intl.Locale(V[0]):new Intl.Locale(typeof H=="string"?H:H[0])},C.__parse=q2,C.formats={number:{integer:{maximumFractionDigits:0},currency:{style:"currency"},percent:{style:"percent"}},date:{short:{month:"numeric",day:"numeric",year:"2-digit"},medium:{month:"short",day:"numeric",year:"numeric"},long:{month:"long",day:"numeric",year:"numeric"},full:{weekday:"long",month:"long",day:"numeric",year:"numeric"}},time:{short:{hour:"numeric",minute:"numeric"},medium:{hour:"numeric",minute:"numeric",second:"numeric"},long:{hour:"numeric",minute:"numeric",second:"numeric",timeZoneName:"short"},full:{hour:"numeric",minute:"numeric",second:"numeric",timeZoneName:"short"}}},C})();var H5=C5;var C2={en:R1,de:D1};function m(C,H,...V){let L=H.replace(/['"]+/g,"");var M;try{M=C.split(".").reduce((e,t)=>e[t],C2[L])}catch{M=C.split(".").reduce((t,i)=>t[i],C2.en)}if(M===void 0&&(M=C.split(".").reduce((e,t)=>e[t],C2.en)),!V.length)return M;let r={};for(let e=0;e<V.length;e+=2){let t=V[e];t=t.replace(/^{([^}]+)?}$/,"$1"),r[t]=V[e+1]}try{return new H5(M,H).format(r)}catch(e){return"Translation "+e}}var V5=async()=>{await customElements.whenDefined("partial-panel-resolver"),await document.createElement("partial-panel-resolver")._getRoutes([{component_name:"config",url_path:"a"}])?.routes?.a?.load?.(),await customElements.whenDefined("ha-panel-config");let V=document.createElement("ha-panel-config");await V?.routerOptions?.routes?.dashboard?.load?.(),await V?.routerOptions?.routes?.general?.load?.(),await V?.routerOptions?.routes?.entities?.load?.(),await V?.routerOptions?.routes?.labels?.load?.(),await customElements.whenDefined("ha-config-dashboard")};var L5=z`
     :host {
+        display: block;  /* Make the host a block element so it takes full parent width.
+                            The default display: inline causes the host to shrink
+                            to content width, making the card narrower than the
+                            main content area. */
         color: var(--primary-text-color);
         background: var(--lovelace-background, var(--primary-background-color));
-        /* Establish a positioning context so the dialog can use position: absolute
-           instead of the default position: fixed (which covers the full viewport
-           and centers on the viewport, not on the Current Tasks card). */
         position: relative;
     }
 
@@ -59,6 +60,7 @@ Try polyfilling it using "@formatjs/intl-pluralrules"
     .card-current {
         width: 100%;
         max-width: 100%;
+        margin: 0;  /* Override the global ha-card margin: 5px so the card spans full host width */
     }
 
     ha-expansion-panel {
@@ -187,28 +189,21 @@ Try polyfilling it using "@formatjs/intl-pluralrules"
     ha-dialog {
         --mdc-dialog-min-width: 600px;
         --mdc-dialog-max-width: 90vw;
-        /* Override MWC's default position: fixed (covers viewport, center = viewport center)
-           with position: absolute (covers the :host, center = host center = Current Tasks card
-           center). The ::part(scrim) override below handles the MWC's internal shadow DOM
-           scrim element which defaults to position: fixed. */
-        position: absolute !important;
-        inset: 0 !important;
+        /* MWC dialog internally uses position: fixed centered on the viewport.
+           We can't override the MWC shadow DOM directly, but we CAN shift the
+           whole dialog with a transform. The transform applies regardless of
+           how the inner surface is positioned, so the dialog visually shifts
+           right by the half-sidebar-width to center on the main content area
+           (where the Current Tasks card now spans, thanks to display:block on
+           :host and margin:0 on .card-current). */
+        transform: translateX(140px);
     }
 
-    /* Target the scrim inside MWC dialog's shadow DOM.
-       This overrides the default position: fixed (viewport-relative)
-       with position: absolute (host-relative). Combined with the
-       :host { position: relative; } above, the scrim fills the host
-       element's box, so the dialog surface centers on the host =
-       the Current Tasks card. */
-    ha-dialog::part(scrim) {
-        position: absolute !important;
-        inset: 0 !important;
-    }
-
-    @media (max-width: 600px) {
+    /* On mobile (no sidebar or narrow sidebar), don't shift the dialog.
+       HA's mobile layout puts the sidebar at a different offset. */
+    @media (max-width: 870px) {
         ha-dialog {
-        --mdc-dialog-min-width: auto;
+            transform: none;
         }
     }
 `;var H2=["days","weeks","months"];function V2(C){return{days:m("intervals.days",C),weeks:m("intervals.weeks",C),months:m("intervals.months",C)}}var M5=C=>C.connection.sendMessagePromise({type:"tag/list"}),r5=C=>C.callWS({type:"config/entity_registry/list"}),e5=C=>C.callWS({type:"config/label_registry/list"}),L2=C=>C.callWS({type:"home_maintenance/get_tasks"}),t5=(C,H)=>C.callWS({type:"home_maintenance/get_task",task_id:H}),i5=(C,H)=>C.callWS({type:"home_maintenance/add_task",...H}),o5=(C,H)=>C.callWS({type:"home_maintenance/remove_task",task_id:H}),a5=(C,H)=>C.callWS({type:"home_maintenance/complete_task",task_id:H}),A5=(C,H)=>C.callWS({type:"home_maintenance/update_task",...H});var d5=C=>C.callWS({type:"home_maintenance/get_config"});var o1=class extends k{constructor(){super();this.items=[]}render(){return Z`

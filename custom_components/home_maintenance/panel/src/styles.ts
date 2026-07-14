@@ -2,11 +2,12 @@ import { css } from 'lit';
 
 export const commonStyle = css`
     :host {
+        display: block;  /* Make the host a block element so it takes full parent width.
+                            The default display: inline causes the host to shrink
+                            to content width, making the card narrower than the
+                            main content area. */
         color: var(--primary-text-color);
         background: var(--lovelace-background, var(--primary-background-color));
-        /* Establish a positioning context so the dialog can use position: absolute
-           instead of the default position: fixed (which covers the full viewport
-           and centers on the viewport, not on the Current Tasks card). */
         position: relative;
     }
 
@@ -57,6 +58,7 @@ export const commonStyle = css`
     .card-current {
         width: 100%;
         max-width: 100%;
+        margin: 0;  /* Override the global ha-card margin: 5px so the card spans full host width */
     }
 
     ha-expansion-panel {
@@ -185,28 +187,21 @@ export const commonStyle = css`
     ha-dialog {
         --mdc-dialog-min-width: 600px;
         --mdc-dialog-max-width: 90vw;
-        /* Override MWC's default position: fixed (covers viewport, center = viewport center)
-           with position: absolute (covers the :host, center = host center = Current Tasks card
-           center). The ::part(scrim) override below handles the MWC's internal shadow DOM
-           scrim element which defaults to position: fixed. */
-        position: absolute !important;
-        inset: 0 !important;
+        /* MWC dialog internally uses position: fixed centered on the viewport.
+           We can't override the MWC shadow DOM directly, but we CAN shift the
+           whole dialog with a transform. The transform applies regardless of
+           how the inner surface is positioned, so the dialog visually shifts
+           right by the half-sidebar-width to center on the main content area
+           (where the Current Tasks card now spans, thanks to display:block on
+           :host and margin:0 on .card-current). */
+        transform: translateX(140px);
     }
 
-    /* Target the scrim inside MWC dialog's shadow DOM.
-       This overrides the default position: fixed (viewport-relative)
-       with position: absolute (host-relative). Combined with the
-       :host { position: relative; } above, the scrim fills the host
-       element's box, so the dialog surface centers on the host =
-       the Current Tasks card. */
-    ha-dialog::part(scrim) {
-        position: absolute !important;
-        inset: 0 !important;
-    }
-
-    @media (max-width: 600px) {
+    /* On mobile (no sidebar or narrow sidebar), don't shift the dialog.
+       HA's mobile layout puts the sidebar at a different offset. */
+    @media (max-width: 870px) {
         ha-dialog {
-        --mdc-dialog-min-width: auto;
+            transform: none;
         }
     }
 `;
