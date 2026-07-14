@@ -202,7 +202,7 @@ class TaskStore:
 
         if "area_id" in updated:
             area_id = updated["area_id"]
-            task.area_id = area_id if area_id else None
+            task.area_id = area_id or None
             registry = entity_registry.async_get(self.hass)
             if registry.async_get(entity.entity_id):
                 registry.async_update_entity(

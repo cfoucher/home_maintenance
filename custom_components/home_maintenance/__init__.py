@@ -205,8 +205,9 @@ def register_services(hass: HomeAssistant) -> None:
 
 
 @callback
-def setup_count_listeners(hass: HomeAssistant, task_store: TaskStore) -> None:
-    """Set up state change listeners for count-based tasks.
+def setup_count_listeners(hass: HomeAssistant, _task_store: TaskStore) -> None:
+    """
+    Set up state change listeners for count-based tasks.
 
     Uses a single listener that dynamically reads the current task list,
     so it handles tasks added/updated after setup.
@@ -250,7 +251,7 @@ def setup_count_listeners(hass: HomeAssistant, task_store: TaskStore) -> None:
 
 
 @callback
-def setup_runtime_listeners(hass: HomeAssistant, task_store: TaskStore) -> None:
+def setup_runtime_listeners(hass: HomeAssistant, _task_store: TaskStore) -> None:
     """Set up state change listeners for runtime-based tasks."""
     for unsub in hass.data[const.DOMAIN].get("unsub_runtime_listeners", []):
         unsub()

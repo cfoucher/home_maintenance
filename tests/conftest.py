@@ -34,7 +34,10 @@ def _stub_module(name: str, **attrs):
 # ---------------------------------------------------------------------------
 # homeassistant top-level
 # ---------------------------------------------------------------------------
-sys.modules["homeassistant"] = MagicMock()
+sys.modules["homeassistant"] = _make_package("homeassistant")
+
+# homeassistant.const
+_stub_module("homeassistant.const", EVENT_STATE_CHANGED=MagicMock())
 
 # ---------------------------------------------------------------------------
 # homeassistant.components  (package — needed for submodule traversal)

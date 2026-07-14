@@ -93,7 +93,9 @@ class HomeMaintenanceSensor(BinarySensorEntity):
         count_threshold = self.task.get("count_threshold", 0)
         count_entity_id = self.task.get("count_entity_id")
 
-        self._attr_is_on = current_count >= count_threshold if count_threshold > 0 else False
+        self._attr_is_on = (
+            current_count >= count_threshold if count_threshold > 0 else False
+        )
         self._attr_extra_state_attributes = {
             "trigger_type": "count",
             "current_count": current_count,
@@ -126,7 +128,11 @@ class HomeMaintenanceSensor(BinarySensorEntity):
                 except (ValueError, TypeError):
                     current_value = None
 
-        self._attr_is_on = delta >= runtime_threshold if runtime_threshold > 0 and current_value is not None else False
+        self._attr_is_on = (
+            delta >= runtime_threshold
+            if runtime_threshold > 0 and current_value is not None
+            else False
+        )
         self._attr_extra_state_attributes = {
             "trigger_type": "runtime",
             "runtime_entity_id": runtime_entity_id,
@@ -186,10 +192,8 @@ class HomeMaintenanceSensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         registry = er.async_get(self.hass)
-        if self._labels:
-            if registry.async_get(self.entity_id):
-                registry.async_update_entity(self.entity_id, labels=set(self._labels))
+        if self._labels and registry.async_get(self.entity_id):
+            registry.async_update_entity(self.entity_id, labels=set(self._labels))
         area_id = self.task.get("area_id")
-        if area_id:
-            if registry.async_get(self.entity_id):
-                registry.async_update_entity(self.entity_id, area_id=area_id)
+        if area_id and registry.async_get(self.entity_id):
+            registry.async_update_entity(self.entity_id, area_id=area_id)
