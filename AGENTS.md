@@ -270,6 +270,7 @@ These are hard-won rules from v1.6.0 and v1.7.0. Any cherry-pick from upstream M
 8. **`ha_restart(confirm=true)` timeouts** — expected behavior during restart. Don't treat as failure. Poll `http://<lan-ip>:8123/api/` for 401 to confirm HA is up.
 9. **`schedule.py` is the testable seam** — any new date math should land here as a pure function. Any logic that imports `homeassistant.*` cannot be unit-tested without the conftest stub and even then, integration testing is hard.
 10. **Build outputs commit `panel/dist/main.js`** — yes, even though it's a generated artifact, it's tracked (like many HA integrations do). The CI rebuilds it at release time, so any divergence is fixed at the next tag.
+11. **Missing `@mdi/js` icon imports pass esbuild but crash at runtime** (discovered v1.7.0, fixed v1.7.1) — when cherry-picking upstream PRs that add new icons to `main.ts` template literals (e.g. `.path=${mdiPencil}`), the import block at the top must be updated too. esbuild bundles successfully (it does not track template-literal references) but the panel crashes in the browser with `ReferenceError: <icon> is not defined`. The whole panel renders blank, which looks like "all my entries are gone" but the data is fine. **Defence:** `tests/test_panel_imports.py` statically analyses every `.ts` file under `panel/src/` and asserts that every `mdi<Name>` reference has a matching import from `@mdi/js`. Three tests: `test_all_mdi_references_are_imported`, `test_no_unused_mdi_imports`, `test_other_components_import_their_dependencies`. When cherry-picking upstream code that touches the panel, **always re-run the full pre-commit gate including the panel build** — `npm run build` will succeed even with missing imports, so the panel build is NOT a sufficient check. The new test in `tests/test_panel_imports.py` IS.
 
 ---
 
@@ -432,5 +433,5 @@ Every commit must pass **all** of:
 
 ---
 
-**Last updated:** 2026‑07‑13 (after v1.7.0 deploy; added §16 testing policy)
+**Last updated:** 2026‑07‑13 (after v1.7.1 hotfix — added §10.11 missing-mdi-imports landmine + tests; bumped §16 testing policy to require static-analysis tests when cherry-picking upstream panel code)
 **Maintainer of this doc:** the agent (cfoucher) — keep it current when the project changes.
