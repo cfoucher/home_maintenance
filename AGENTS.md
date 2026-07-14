@@ -372,7 +372,65 @@ This file is project-specific. The **global** agent rules are in `C:\Users\conra
 
 When in doubt, read the global file first.
 
+## 16. Testing policy
+
+**The rule (hard):** no commit is made to `dev` without tests that validate the change. **We do not commit any code without tests to validate it all.**
+
+**The principle:** every change to the codebase — new feature, bug fix, refactor, cherry-pick from upstream — ships with tests that prove it works. Tests are the spec; they describe what the code does. "Fully tested" is the default, not the goal.
+
+### What "fully tested" means in this codebase
+
+| Change | Test requirement |
+|---|---|
+| **New pure function in `schedule.py`** | **Required** — unit test in `tests/test_schedule.py` covering happy path + edge cases (month‑end clamping, leap years, threshold boundaries, zero/negative inputs) |
+| **New field on `HomeMaintenanceTask`** | **Required** — test that the field loads from storage with the correct default |
+| **New entity / binary sensor logic** | **Required where possible** — extract a pure helper, test that. If it genuinely can't be extracted, `# pragma: no cover` + commit message explains why |
+| **New service handler** (e.g., `increment_count`) | **Required at the pure‑logic level** — the handler's delegate is tested; the handler itself is HA‑runtime‑only |
+| **New event listener** (count / runtime triggers) | **Required at the helper level** — the threshold / baseline / increment math MUST live in `schedule.py` and be tested there. The listener itself is HA‑runtime‑only |
+| **TypeScript change** | **Required** — `npm run build` succeeds. For non‑trivial logic, extract a pure function and test it |
+| **New translation strings** | **Required** — strings present in BOTH `translations/en.json` AND `panel/localize/languages/en.json` (and any other supported language). For a new language, `localize.ts` imports it (PR #99 lesson — only en was imported, so `de.json` was dead code) |
+| **Bug fix** | **Required** — add a regression test that fails before the fix and passes after |
+| **Refactor (no behavior change)** | **Required** — existing tests still pass. Add tests for any newly exposed public API |
+| **Cherry‑pick from upstream** | **Required** — re‑run full test suite after. Fix any failures before committing |
+
+### The testable seam: `schedule.py`
+
+`custom_components/home_maintenance/schedule.py` is the only file in the integration with **zero `homeassistant.*` imports**. This is what makes unit testing possible. **If you are adding logic that needs testing, refactor it into `schedule.py` first, then test from there.**
+
+This is the single most important testability rule in the project. It exists because:
+- `binary_sensor.py`, `__init__.py`, `store.py`, `websocket.py` all import `homeassistant.*` at module top
+- `tests/conftest.py` provides a `homeassistant.*` module‑tree stub, but the stub is fragile — every new HA import might need a conftest update
+- `schedule.py` is a pure‑Python module — tests run in milliseconds with no setup
+
+### Pre‑commit checklist (from §4, restated as a hard rule)
+
+Every commit must pass **all** of:
+1. `python -m pytest tests/ -v` — all tests green, including new ones
+2. `python -m ruff check custom_components/home_maintenance/` — clean
+3. `python -m ruff format --check custom_components/home_maintenance/` — clean
+4. `cd custom_components/home_maintenance/panel && npm ci && npm run build` — succeeds
+5. `git status` — clean
+6. New / modified code has tests per the table above
+
+**If any of these fail, the commit does not happen.** Fix and retry. There is no "I'll add tests in a follow‑up commit" — the tests ship with the change.
+
+### When code genuinely can't be tested
+
+- Document the reason in the commit message (`no-test: <reason>`)
+- Mark with `# pragma: no cover` in the test file
+- Add a follow‑up todo to write the test later
+- Open an issue / TODO so it doesn't get lost
+
+### Anti‑patterns to avoid
+
+- "I'll add tests later" — tests get forgotten. Write them with the change.
+- Cherry‑picking upstream code without re‑running the existing tests after.
+- Adding new trigger math in `binary_sensor.py` directly instead of `schedule.py`.
+- Modifying `__init__.py`'s event listeners without extracting the core logic into a testable helper.
+- Skipping tests on a "small change" — small changes break things.
+- Tests that only cover the happy path. Edge cases (empty input, threshold = 0, month‑end, leap year, type mismatches) are the most likely failure modes.
+
 ---
 
-**Last updated:** 2026‑07‑13 (after v1.7.0 deploy)
+**Last updated:** 2026‑07‑13 (after v1.7.0 deploy; added §16 testing policy)
 **Maintainer of this doc:** the agent (cfoucher) — keep it current when the project changes.
