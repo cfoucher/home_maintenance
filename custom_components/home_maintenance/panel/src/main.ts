@@ -590,7 +590,7 @@ export class HomeMaintenancePanel extends LitElement {
                         ${localize('panel.cards.new.actions.add_task', this.hass.language)}
                     </ha-button>
                     <div class="version">
-                        v${this.config?.version ?? ""}
+                        v${this.config?.version ?? "?.?"}
                     </div>
                 </div>
             </div>

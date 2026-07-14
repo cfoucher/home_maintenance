@@ -38,7 +38,8 @@ Try polyfilling it using "@formatjs/intl-pluralrules"
     .version {
         font-size: 14px;
         font-weight: 500;
-        color: rgba(var(--rgb-text-primary-color), 0.9);
+        color: rgba(var(--rgb-text-primary-color, 255, 255, 255), 0.9);
+        white-space: nowrap;
     }
 
     .view {
@@ -273,7 +274,7 @@ Try polyfilling it using "@formatjs/intl-pluralrules"
                         ${m("panel.cards.new.actions.add_task",this.hass.language)}
                     </ha-button>
                     <div class="version">
-                        v${this.config?.version??""}
+                        v${this.config?.version??"?.?"}
                     </div>
                 </div>
             </div>

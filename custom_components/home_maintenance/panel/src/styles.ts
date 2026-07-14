@@ -36,7 +36,8 @@ export const commonStyle = css`
     .version {
         font-size: 14px;
         font-weight: 500;
-        color: rgba(var(--rgb-text-primary-color), 0.9);
+        color: rgba(var(--rgb-text-primary-color, 255, 255, 255), 0.9);
+        white-space: nowrap;
     }
 
     .view {

@@ -393,3 +393,56 @@ def test_header_card_gap_css_present():
         f"with N >= 24. Found values: padding-top=[{', '.join(view_padding_matches)}], "
         f"margin-top=[{', '.join(card_margin_matches)}]"
     )
+
+
+# ---------------------------------------------------------------------------
+# v1.7.6 regression checks — version display visibility
+# ---------------------------------------------------------------------------
+
+def test_version_css_has_visible_fallback():
+    """The .version CSS rule must have a fallback color value so the
+    version number is always visible against the dark header, even if
+    HA's --rgb-text-primary-color variable is undefined.
+
+    The fallback triple (255, 255, 255) provides white text when the
+    variable is unset. The old form without fallback
+    (var(--rgb-text-primary-color)) could produce transparent/invalid
+    text if the variable doesn't resolve in the current layout context.
+    """
+    styles_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "src" / "styles.ts"
+    source = styles_path.read_text(encoding="utf-8")
+
+    # Extract the .version block
+    version_block_match = re.search(
+        r"\.version\s*\{([^}]+)\}",
+        source,
+        re.DOTALL,
+    )
+    assert version_block_match is not None, "Could not find .version rule in styles.ts"
+    version_block = version_block_match.group(1)
+
+    # The color line MUST use var() WITH a fallback value
+    has_fallback_color = bool(re.search(
+        r"var\(--rgb-text-primary-color\s*,\s*255\s*,\s*255\s*,\s*255\s*\)",
+        version_block,
+    ))
+
+    # It must NOT use the old form without fallback (undetectable text)
+    has_no_fallback = bool(re.search(
+        r"var\(--rgb-text-primary-color\)",
+        version_block,
+    ))
+
+    assert has_fallback_color, (
+        ".version rule is missing the var(... 255, 255, 255) fallback. "
+        f"Found color-related line(s) in block:\n{version_block}"
+    )
+    assert not has_no_fallback, (
+        ".version rule uses var(--rgb-text-primary-color) WITHOUT a fallback. "
+        "Add the fallback triple: var(--rgb-text-primary-color, 255, 255, 255)"
+    )
+
+    # Also verify white-space: nowrap is present to prevent wrapping
+    assert "white-space: nowrap" in version_block, (
+        ".version rule is missing white-space: nowrap"
+    )
