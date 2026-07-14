@@ -50,4 +50,5 @@ export interface Task {
     tag_id?: string;
     icon?: string;
     description: string;
+    area_id?: string | null;
 }

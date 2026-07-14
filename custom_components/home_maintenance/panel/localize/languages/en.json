@@ -41,6 +41,9 @@
                     },
                     "description": {
                         "heading": "Description"
+                    },
+                    "area": {
+                        "heading": "Area"
                     }
                 },
                 "sections": {
@@ -90,6 +93,9 @@
                     },
                     "label": {
                         "heading": "Label(s)"
+                    },
+                    "area": {
+                        "heading": "Area"
                     }
                 },
                 "sections": {

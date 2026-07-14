@@ -23,6 +23,7 @@ interface TaskFormData {
     label: string[];
     tag: string;
     description: string;
+    area: string;
 }
 
 export class HomeMaintenancePanel extends LitElement {
@@ -45,6 +46,7 @@ export class HomeMaintenancePanel extends LitElement {
         label: [],
         tag: "",
         description: "",
+        area: "",
     };
     private _advancedOpen: boolean = false;
 
@@ -59,6 +61,7 @@ export class HomeMaintenancePanel extends LitElement {
         label: [],
         tag: "",
         description: "",
+        area: "",
     };
 
     private get _columns() {
@@ -269,6 +272,7 @@ export class HomeMaintenancePanel extends LitElement {
             { name: "label", selector: { label: { multiple: true } }, },
             { name: "tag", selector: { entity: { filter: { domain: "tag" } } }, },
             { name: "description", selector: { text: {} }, },
+            { name: "area", selector: { area: {} }, },
         ]
     };
 
@@ -296,6 +300,7 @@ export class HomeMaintenancePanel extends LitElement {
             { name: "label", selector: { label: { multiple: true } }, },
             { name: "tag", selector: { entity: { filter: { domain: "tag" } } }, },
             { name: "description", selector: { text: { multiline: true } } },
+            { name: "area", selector: { area: {} }, },
         ]
     };
 
@@ -350,6 +355,7 @@ export class HomeMaintenancePanel extends LitElement {
             label: [],
             tag: "",
             description: "",
+            area: "",
         };
 
         this.tasks = await loadTasks(this.hass!);
@@ -365,6 +371,7 @@ export class HomeMaintenancePanel extends LitElement {
             label: [],
             tag: "",
             description: "",
+            area: "",
         };
     }
 
@@ -537,7 +544,7 @@ export class HomeMaintenancePanel extends LitElement {
     }
 
     private async _handleAddTaskClick() {
-        const { title, interval_value, interval_type, last_performed, tag, icon, label, description } = this._formData;
+        const { title, interval_value, interval_type, last_performed, tag, icon, label, description, area } = this._formData;
 
         if (!title?.trim() || !interval_value || !interval_type) {
             const msg = localize("panel.cards.new.alerts.required", this.hass!.language);
@@ -554,6 +561,7 @@ export class HomeMaintenancePanel extends LitElement {
             icon: icon?.trim() || "mdi:calendar-check",
             labels: label ?? [],
             description,
+            area_id: area?.trim() || undefined,
         };
 
         try {
@@ -593,6 +601,7 @@ export class HomeMaintenancePanel extends LitElement {
                 label: labels.map((l) => l.label_id),
                 tag: task.tag_id ?? "",
                 description: task.description,
+                area: entity?.area_id ?? "",
             };
 
             await this.updateComplete;
@@ -620,6 +629,12 @@ export class HomeMaintenancePanel extends LitElement {
             updates.tag_id = this._editFormData.tag.trim();
         } else {
             updates.tag_id = null;
+        }
+
+        if (this._editFormData.area && this._editFormData.area.trim() !== "") {
+            updates.area_id = this._editFormData.area.trim();
+        } else {
+            updates.area_id = null;
         }
 
         const payload = {
