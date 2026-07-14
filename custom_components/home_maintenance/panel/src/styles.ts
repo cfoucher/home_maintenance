@@ -41,6 +41,8 @@ export const commonStyle = css`
         justify-content: center;
         flex-wrap: wrap;
         align-items: flex-start;
+        /* Give breathing room between the toolbar and the tasks card */
+        padding-top: 32px;
     }
 
     ha-card {
@@ -178,6 +180,20 @@ export const commonStyle = css`
 
     ha-dialog {
         --mdc-dialog-min-width: 600px;
+        /* Constrain the dialog content width and let the inner surface
+           center via part(dialog) margin: auto.
+           The --mdc-dialog-* variables are respected by @material/mwc-dialog
+           which ha-dialog wraps. The ::part(dialog) selector targets the
+           inner .mdc-dialog__surface element to center it horizontally. */
+        --mdc-dialog-max-width: 90vw;
+    }
+
+    /* Center the dialog surface within the viewport.
+       The dialog was offset to the left because its internal
+       left: 50%; transform: translateX(-50%) positioning
+       misaligns in this component's layout context. */
+    ha-dialog::part(dialog) {
+        margin: 0 auto;
     }
 
     @media (max-width: 600px) {

@@ -278,3 +278,66 @@ def test_localization_keys_match():
     assert not relevant_de, (
         f"en.json is missing these keys that de.json has: {sorted(relevant_de)}"
     )
+
+
+# ---------------------------------------------------------------------------
+# v1.7.3 layout regression checks — dialog centering and header gap
+# ---------------------------------------------------------------------------
+
+def test_dialog_centering_css_present():
+    """styles.ts must have CSS that centers the ha-dialog in the viewport.
+
+    At least one of the following must be present:
+      - ::part(dialog) selector with margin centering
+      - --mdc-dialog-* custom property related to sizing
+      - position: fixed on ha-dialog
+    """
+    styles_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "src" / "styles.ts"
+    source = styles_path.read_text(encoding="utf-8")
+
+    has_part_dialog = "::part(dialog)" in source
+    has_mdc_sizing = bool(re.search(r"--mdc-dialog-(min|max|content)-width", source))
+    has_position_fixed = bool(re.search(r"ha-dialog\s*\{[^}]*position\s*:\s*fixed", source, re.DOTALL))
+
+    assert has_part_dialog or has_mdc_sizing or has_position_fixed, (
+        "No dialog centering CSS found in styles.ts. "
+        "Expected at least one of: ::part(dialog), --mdc-dialog-* sizing, "
+        "or position: fixed on ha-dialog."
+    )
+
+
+def test_header_card_gap_css_present():
+    """styles.ts must have CSS that creates >= 24px gap between the
+    toolbar header and the Current Tasks card.
+
+    At least one of these must be present with a value >= 24px:
+      - .view with padding-top
+      - .card-current with margin-top
+      - :host > .view with padding-top (if in shadow DOM scoping)
+    """
+    styles_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "src" / "styles.ts"
+    source = styles_path.read_text(encoding="utf-8")
+
+    # Search for padding-top on .view
+    view_padding_matches = re.findall(
+        r"\.view\s*\{[^}]*padding-top\s*:\s*(\d+)px",
+        source,
+        re.DOTALL,
+    )
+    # Search for margin-top on .card-current
+    card_margin_matches = re.findall(
+        r"\.card-current\s*\{[^}]*margin-top\s*:\s*(\d+)px",
+        source,
+        re.DOTALL,
+    )
+
+    for val_str in view_padding_matches + card_margin_matches:
+        if int(val_str) >= 24:
+            return  # Found a sufficient gap
+
+    assert False, (
+        "No header-card gap of >= 24px found in styles.ts. "
+        "Expected .view { padding-top: Npx } or .card-current { margin-top: Npx } "
+        f"with N >= 24. Found values: padding-top=[{', '.join(view_padding_matches)}], "
+        f"margin-top=[{', '.join(card_margin_matches)}]"
+    )
