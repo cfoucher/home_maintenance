@@ -1,5 +1,7 @@
 import {
     mdiCheckCircleOutline,
+    mdiPencil,
+    mdiDelete,
 } from "@mdi/js";
 import { LitElement, html, nothing } from "lit";
 import { property, state, query } from "lit/decorators.js";
