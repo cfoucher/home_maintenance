@@ -9,7 +9,6 @@ import type { HomeAssistant } from "custom-card-helpers";
 import { formatDateNumeric } from "custom-card-helpers";
 
 import { localize } from '../localize/localize';
-import { VERSION } from "./const";
 import { loadConfigDashboard } from "./helpers";
 import { commonStyle } from './styles'
 import { EntityRegistryEntry, IntegrationConfig, IntervalType, INTERVAL_TYPES, getIntervalTypeLabels, Label, Task, Tag, TriggerType } from './types';
@@ -61,6 +60,9 @@ export class HomeMaintenancePanel extends LitElement {
         runtime_threshold: "",
     };
     private _advancedOpen: boolean = false;
+
+    // Add dialog state
+    @state() private _showAddDialog: boolean = false;
 
     // Edit dialog state
     @state() private _editingTaskId: string | null = null;
@@ -336,9 +338,9 @@ export class HomeMaintenancePanel extends LitElement {
                 selector: {
                     select: {
                         options: [
-                            { value: "time", label: "Time-based" },
-                            { value: "count", label: "Count-based" },
-                            { value: "runtime", label: "Runtime-based" },
+                            { value: "time", label: localize('panel.triggers.time', this.hass!.language) },
+                            { value: "count", label: localize('panel.triggers.count', this.hass!.language) },
+                            { value: "runtime", label: localize('panel.triggers.runtime', this.hass!.language) },
                         ],
                         mode: "dropdown"
                     },
@@ -399,9 +401,9 @@ export class HomeMaintenancePanel extends LitElement {
                 selector: {
                     select: {
                         options: [
-                            { value: "time", label: "Time-based" },
-                            { value: "count", label: "Count-based" },
-                            { value: "runtime", label: "Runtime-based" },
+                            { value: "time", label: localize('panel.triggers.time', this.hass!.language) },
+                            { value: "count", label: localize('panel.triggers.count', this.hass!.language) },
+                            { value: "runtime", label: localize('panel.triggers.runtime', this.hass!.language) },
                         ],
                         mode: "dropdown"
                     },
@@ -580,66 +582,80 @@ export class HomeMaintenancePanel extends LitElement {
                     <div class="main-title">
                         ${this.config?.options.sidebar_title}
                     </div>
+                    <ha-button
+                        class="add-task-button"
+                        @click=${() => { this._advancedOpen = false; this.resetForm(); this._showAddDialog = true; }}
+                    >
+                        <ha-icon icon="mdi:plus"></ha-icon>
+                        ${localize('panel.cards.new.actions.add_task', this.hass.language)}
+                    </ha-button>
                     <div class="version">
-                        v${VERSION}
+                        v${this.config?.version ?? ""}
                     </div>
                 </div>
             </div>
 
             <div class="view">
                 <ha-card
-                    header="${localize('panel.cards.new.title', this.hass.language)}"
-                    class="card-new"
-                >
-                    <div class="card-content">${this.renderForm()}</div>
-                </ha-card>
-
-                <ha-card
                     header="${localize('panel.cards.current.title', this.hass.language)}"
-                    class="card-current"
                 >
                     <div class="card-content">${this.renderTasks()}</div>
                 </ha-card>
             </div>
 
+            ${this.renderAddDialog()}
             ${this.renderEditDialog()}
         `;
     }
 
-    renderForm() {
+    renderAddDialog() {
         if (!this.hass) return html``;
 
-        return html`
-            <ha-form
-                .hass=${this.hass}
-                .schema=${this._basicSchema}
-                .computeLabel=${this._computeLabel.bind(this)}
-                .computeHelper=${this._computeHelper.bind(this)}
-                .data=${this._formData}
-                @value-changed=${(e: CustomEvent) => this._handleFormValueChanged(e)}
-            ></ha-form>
+        if (!this._showAddDialog) return html``;
 
-            <ha-expansion-panel
-                header="${localize('panel.cards.new.sections.optional', this.hass.language)}"
-                .opened=${this._advancedOpen}
-                @opened-changed=${(e: CustomEvent) => (this._advancedOpen = e.detail.value)}
-                class="extras-panel"
+        return html`
+            <ha-dialog
+                open
+                heading="${localize('panel.dialog.add_task.title', this.hass.language)}"
+                prevent-scrim-close
+                @closed=${this._handleAddDialogClose}
             >
                 <ha-form
+                    autofocus
                     .hass=${this.hass}
-                    .data=${this._formData}
-                    .schema=${this._advancedSchema}
+                    .schema=${this._basicSchema}
                     .computeLabel=${this._computeLabel.bind(this)}
                     .computeHelper=${this._computeHelper.bind(this)}
+                    .data=${this._formData}
                     @value-changed=${(e: CustomEvent) => this._handleFormValueChanged(e)}
                 ></ha-form>
-            </ha-expansion-panel>
 
-            <div class="form-field">
-                <ha-button size="small" class="add-button"
-                    @click=${this._handleAddTaskClick}>${localize('panel.cards.new.actions.add_task', this.hass.language)}
-                </ha-button>
-            </div>
+                <ha-expansion-panel
+                    header="${localize('panel.cards.new.sections.optional', this.hass.language)}"
+                    .opened=${this._advancedOpen}
+                    @opened-changed=${(e: CustomEvent) => (this._advancedOpen = e.detail.value)}
+                    class="extras-panel"
+                >
+                    <ha-form
+                        .hass=${this.hass}
+                        .data=${this._formData}
+                        .schema=${this._advancedSchema}
+                        .computeLabel=${this._computeLabel.bind(this)}
+                        .computeHelper=${this._computeHelper.bind(this)}
+                        @value-changed=${(e: CustomEvent) => this._handleFormValueChanged(e)}
+                    ></ha-form>
+                </ha-expansion-panel>
+
+                <ha-dialog-footer slot="footer">
+                    <ha-button data-dialog="close" appearance="plain" slot="secondaryAction"
+                        @click=${this._handleAddDialogClose}>
+                        ${localize('panel.dialog.edit_task.actions.cancel', this.hass.language)}
+                    </ha-button>
+                    <ha-button slot="primaryAction" @click=${this._handleAddTaskClick}>
+                        ${localize('panel.cards.new.actions.add_task', this.hass.language)}
+                    </ha-button>
+                </ha-dialog-footer>
+            </ha-dialog>
         `;
     }
 
@@ -647,7 +663,20 @@ export class HomeMaintenancePanel extends LitElement {
         if (!this.hass) return html``;
 
         if (!this.tasks || this.tasks.length === 0) {
-            return html`<span>${localize('common.no_tasks', this.hass!.language)}</span>`;
+            return html`
+                <div class="empty-state">
+                    <ha-icon icon="mdi:clipboard-text-outline" class="empty-icon"></ha-icon>
+                    <p class="empty-title">${localize('panel.current.empty.title', this.hass!.language)}</p>
+                    <p class="empty-description">${localize('panel.current.empty.description', this.hass!.language)}</p>
+                    <ha-button
+                        class="add-task-button-empty"
+                        @click=${() => { this._advancedOpen = false; this.resetForm(); this._showAddDialog = true; }}
+                    >
+                        <ha-icon icon="mdi:plus"></ha-icon>
+                        ${localize('panel.cards.new.actions.add_task', this.hass.language)}
+                    </ha-button>
+                </div>
+            `;
         }
 
         return html`
@@ -698,6 +727,13 @@ export class HomeMaintenancePanel extends LitElement {
                     </ha-button>
             </ha-dialog>
         `;
+    }
+
+    private _handleAddDialogClose() {
+        this._showAddDialog = false;
+        this._advancedOpen = false;
+        this.resetForm();
+        this.loadData();
     }
 
     private async _handleAddTaskClick() {

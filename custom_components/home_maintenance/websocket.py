@@ -9,6 +9,7 @@ from homeassistant.components.websocket_api import connection, messages
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
+from . import const
 from .const import DOMAIN
 from .store import HomeMaintenanceTask
 
@@ -191,6 +192,7 @@ def websocket_get_config(
         {
             "data": dict(entry.data),
             "options": dict(entry.options),
+            "version": const.VERSION,
         },
     )
 

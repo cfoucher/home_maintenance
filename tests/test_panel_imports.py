@@ -135,3 +135,146 @@ def test_other_components_import_their_dependencies():
         assert not unused, (
             f"\n{rel}: unused @mdi/js imports: {sorted(unused)}"
         )
+
+
+# ---------------------------------------------------------------------------
+# v1.7.2 regression checks — version sync and Add Task dialog
+# ---------------------------------------------------------------------------
+
+def test_panel_const_ts_deleted():
+    """panel/src/const.ts must not exist (v1.7.2 removed it).
+
+    The version constant was moved to the backend as the single
+    source of truth.
+    """
+    const_ts = PANEL_SRC / "const.ts"
+    assert not const_ts.exists(), (
+        f"{const_ts} should have been deleted. "
+        f"It contained a stale VERSION constant that was never synced. "
+        f"The backend's const.py VERSION is now the single source of truth."
+    )
+
+
+def test_main_ts_no_const_import():
+    """panel/src/main.ts must NOT import from './const'.
+
+    The file should get its version from this.config.version
+    (fetched from the getConfig websocket handler).
+    """
+    source = _read_file("main.ts")
+    # Check for imports from "./const" (no quotes — both ' and " are valid TS)
+    matches = re.findall(r"from\s+[\"']\.\/const[\"']", source)
+    assert not matches, (
+        f"main.ts still imports from './const': {matches}. "
+        f"Remove the import and use this.config?.version instead."
+    )
+
+
+def test_main_ts_uses_config_version():
+    """panel/src/main.ts must reference config.version for the version display.
+
+    This is the replacement for the deleted VERSION constant.
+    """
+    source = _read_file("main.ts")
+    # Look for the version template: v${...config?.version...} or v${...config["version"]...}
+    has_config_version = bool(re.search(r"config\?\.\s*version|config\[\s*[\"']version[\"']\s*\]", source))
+    assert has_config_version, (
+        "main.ts does not appear to use this.config?.version for version display. "
+        "The version should come from the backend's getConfig response."
+    )
+
+
+def test_main_ts_has_show_add_dialog():
+    """The _showAddDialog state flag must be present for the modal Add Task dialog."""
+    source = _read_file("main.ts")
+    count = source.count("_showAddDialog")
+    assert count >= 2, (
+        f"_showAddDialog appears {count} time(s) — expected at least 2 "
+        f"(state declaration + usage in render or click handler)."
+    )
+
+
+def test_main_ts_has_add_dialog_cancel_button():
+    """The Add Task dialog must have a Cancel button (or a localize() key referencing cancel)."""
+    source = _read_file("main.ts")
+    # Look for the cancel button (either hardcoded or via localize key)
+    has_cancel = (
+        "panel.dialog.edit_task.actions.cancel" in source
+        or "Cancel" in source
+    )
+    assert has_cancel, (
+        "Add Task dialog missing a Cancel button or its localize key."
+    )
+
+
+def test_main_ts_has_empty_state():
+    """renderTasks() must have an empty-state section with a title."""
+    source = _read_file("main.ts")
+    has_empty = (
+        "panel.current.empty.title" in source
+        or "No tasks yet" in source
+    )
+    assert has_empty, (
+        "No empty state found in main.ts. Expected localize key 'panel.current.empty.title' "
+        "or the text 'No tasks yet'."
+    )
+
+
+def test_hardcoded_trigger_strings_removed():
+    """Hardcoded 'Time-based'/'Count-based'/'Runtime-based' must be gone from main.ts.
+
+    v1.7.1 noted these as a follow-up; v1.7.2 routes them through localize().
+    """
+    source = _read_file("main.ts")
+    for bad_string in ["Time-based", "Count-based", "Runtime-based"]:
+        assert bad_string not in source, (
+            f"Hardcoded '{bad_string}' found in main.ts. "
+            f"It should use localize('panel.triggers.*') instead."
+        )
+
+
+def test_localization_keys_match():
+    """en.json and de.json must have the same set of localize keys.
+
+    Per the #99 lesson: if we add strings to en.json, we must also
+    add them to de.json (even if the translation is rough or empty).
+    """
+    import json
+
+    en_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "localize" / "languages" / "en.json"
+    de_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "localize" / "languages" / "de.json"
+
+    def _collect_keys(obj, prefix="") -> set[str]:
+        keys = set()
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                full = f"{prefix}.{k}" if prefix else k
+                if isinstance(v, dict):
+                    keys |= _collect_keys(v, full)
+                else:
+                    keys.add(full)
+        return keys
+
+    with open(en_path, encoding="utf-8") as f:
+        en_data = json.load(f)
+    with open(de_path, encoding="utf-8") as f:
+        de_data = json.load(f)
+
+    en_keys = _collect_keys(en_data)
+    de_keys = _collect_keys(de_data)
+
+    # Don't flag the trivial "common.loading" / "common.none" diff if both exist
+    missing_in_de = en_keys - de_keys
+    missing_in_en = de_keys - en_keys
+
+    # Common localize prefix checks
+    common_prefix = "panel."
+    relevant_en = {k for k in missing_in_de if k.startswith(common_prefix)}
+    relevant_de = {k for k in missing_in_en if k.startswith(common_prefix)}
+
+    assert not relevant_en, (
+        f"de.json is missing these keys that en.json has: {sorted(relevant_en)}"
+    )
+    assert not relevant_de, (
+        f"en.json is missing these keys that de.json has: {sorted(relevant_de)}"
+    )

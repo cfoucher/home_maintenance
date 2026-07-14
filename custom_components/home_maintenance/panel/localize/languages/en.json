@@ -13,6 +13,17 @@
         "months": "Months"
     },
     "panel": {
+        "triggers": {
+            "time": "Time-based",
+            "count": "Count-based",
+            "runtime": "Runtime-based"
+        },
+        "current": {
+            "empty": {
+                "title": "No tasks yet",
+                "description": "Create your first maintenance task to get started."
+            }
+        },
         "cards": {
             "new": {
                 "title": "Create New Task",
@@ -72,6 +83,9 @@
             }
         },
         "dialog": {
+            "add_task": {
+                "title": "Create New Task"
+            },
             "edit_task": {
                 "title": "Edit Task",
                 "fields": {
@@ -93,6 +107,9 @@
                     },
                     "label": {
                         "heading": "Label(s)"
+                    },
+                    "description": {
+                        "heading": "Description"
                     },
                     "area": {
                         "heading": "Area"

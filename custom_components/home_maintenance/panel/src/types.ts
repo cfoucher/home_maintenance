@@ -15,6 +15,7 @@ export function getIntervalTypeLabels(lang: string): Record<IntervalType, string
 export interface IntegrationConfig {
     data: Record<string, any>;
     options: Record<string, any>;
+    version?: string;
 }
 
 export interface Label {

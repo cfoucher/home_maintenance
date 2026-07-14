@@ -46,6 +46,18 @@ sys.modules["homeassistant.components"] = _make_package("homeassistant.component
 
 _stub_module("homeassistant.components.binary_sensor", DOMAIN="binary_sensor")
 
+# homeassistant.components.websocket_api (package)
+_sa_pkg = _make_package("homeassistant.components.websocket_api")
+sys.modules["homeassistant.components.websocket_api"] = _sa_pkg
+_stub_module(
+    "homeassistant.components.websocket_api.connection",
+    ActiveConnection=MagicMock(),
+)
+_stub_module(
+    "homeassistant.components.websocket_api.messages",
+    BASE_COMMAND_MESSAGE_SCHEMA=MagicMock(),
+)
+
 _tag_pkg = _make_package("homeassistant.components.tag")
 sys.modules["homeassistant.components.tag"] = _tag_pkg
 _stub_module(
@@ -85,6 +97,25 @@ _stub_module(
     "homeassistant.helpers.entity_platform", AddEntitiesCallback=MagicMock()
 )
 _stub_module("homeassistant.helpers.typing", ConfigType=MagicMock())
+
+# voluptuous — for schema validation in websocket handlers
+_stub_module(
+    "voluptuous",
+    Schema=MagicMock(),
+    Required=MagicMock(),
+    Optional=MagicMock(),
+    Coerce=MagicMock(),
+    Any=MagicMock(),
+    All=MagicMock(),
+    Length=MagicMock(),
+    Range=MagicMock(),
+    In=MagicMock(),
+    Lower=MagicMock(),
+    Boolean=MagicMock(),
+    Number=MagicMock(),
+    String=MagicMock(),
+)
+
 _stub_module(
     "homeassistant.helpers.config_validation",
     config_entry_only_config_schema=MagicMock(),

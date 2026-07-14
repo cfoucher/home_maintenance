@@ -48,14 +48,9 @@ export const commonStyle = css`
         margin: 5px;
     }
 
-    .card-new {
-        width: 500px;
-        max-width: 500px;
-    }
-
     .card-current {
-        width: 850px;
-        max-width: 850px;
+        width: 100%;
+        max-width: 100%;
     }
 
     ha-expansion-panel {
@@ -142,6 +137,43 @@ export const commonStyle = css`
     .warning {
         --mdc-theme-primary: var(--error-color);
         color: var(--primary-text-color);
+    }
+
+    .add-task-button {
+        margin-right: 16px;
+        --mdc-theme-primary: var(--primary-color);
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 16px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        --mdc-icon-size: 64px;
+        color: var(--secondary-text-color);
+        margin-bottom: 16px;
+    }
+
+    .empty-title {
+        font-size: 20px;
+        font-weight: 500;
+        margin: 0 0 8px 0;
+        color: var(--primary-text-color);
+    }
+
+    .empty-description {
+        font-size: 14px;
+        margin: 0 0 24px 0;
+        color: var(--secondary-text-color);
+    }
+
+    .add-task-button-empty {
+        --mdc-theme-primary: var(--primary-color);
     }
 
     ha-dialog {

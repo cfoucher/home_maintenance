@@ -13,6 +13,17 @@
         "months": "Monate"
     },
     "panel": {
+        "triggers": {
+            "time": "Zeitbasiert",
+            "count": "Zählbasiert",
+            "runtime": "Laufzeitbasiert"
+        },
+        "current": {
+            "empty": {
+                "title": "Noch keine Aufgaben",
+                "description": "Erstellen Sie Ihre erste Wartungsaufgabe, um loszulegen."
+            }
+        },
         "cards": {
             "new": {
                 "title": "Neue Aufgabe erstellen",
@@ -38,6 +49,9 @@
                     },
                     "label": {
                         "heading": "Bezeichnung(en)"
+                    },
+                    "description": {
+                        "heading": "Beschreibung"
                     },
                     "area": {
                         "heading": "Bereich"
@@ -69,6 +83,9 @@
             }
         },
         "dialog": {
+            "add_task": {
+                "title": "Neue Aufgabe erstellen"
+            },
             "edit_task": {
                 "title": "Aufgabe bearbeiten",
                 "fields": {
@@ -90,6 +107,9 @@
                     },
                     "label": {
                         "heading": "Bezeichnung(en)"
+                    },
+                    "description": {
+                        "heading": "Beschreibung"
                     },
                     "area": {
                         "heading": "Bereich"
