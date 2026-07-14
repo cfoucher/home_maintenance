@@ -36,7 +36,10 @@ export const commonStyle = css`
     .version {
         font-size: 14px;
         font-weight: 500;
-        color: rgba(var(--rgb-text-primary-color, 255, 255, 255), 0.9);
+        /* Inherit the header's theme-aware text color.
+           HA's --app-header-text-color is white in dark mode and dark in light mode.
+           Don't override it with a hardcoded white (which was invisible on light themes). */
+        color: inherit;
         white-space: nowrap;
     }
 

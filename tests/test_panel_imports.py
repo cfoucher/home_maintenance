@@ -399,47 +399,36 @@ def test_header_card_gap_css_present():
 # v1.7.6 regression checks — version display visibility
 # ---------------------------------------------------------------------------
 
-def test_version_css_has_visible_fallback():
-    """The .version CSS rule must have a fallback color value so the
-    version number is always visible against the dark header, even if
-    HA's --rgb-text-primary-color variable is undefined.
+def test_version_css_inherits_theme_color():
+    """.version CSS must use `color: inherit` so the version text adapts to
+    the HA theme (light/dark). A hardcoded color (e.g., white) would be
+    invisible on light themes.
 
-    The fallback triple (255, 255, 255) provides white text when the
-    variable is unset. The old form without fallback
-    (var(--rgb-text-primary-color)) could produce transparent/invalid
-    text if the variable doesn't resolve in the current layout context.
+    Regression for v1.7.6: the rgba(..., 255, 255, 255, 0.9) fallback made the
+    version invisible in light mode because the header background is also light.
     """
     styles_path = REPO_ROOT / "custom_components" / "home_maintenance" / "panel" / "src" / "styles.ts"
     source = styles_path.read_text(encoding="utf-8")
 
-    # Extract the .version block
-    version_block_match = re.search(
-        r"\.version\s*\{([^}]+)\}",
-        source,
-        re.DOTALL,
+    # Find the .version CSS block
+    match = re.search(r"\.version\s*\{([^}]+)\}", source, re.DOTALL)
+    assert match, "No .version CSS block found in styles.ts"
+    version_block = match.group(1)
+
+    # The .version block must use color: inherit (not a hardcoded color)
+    assert "color: inherit" in version_block, (
+        f".version CSS must use 'color: inherit' for theme responsiveness. "
+        f"Found block:\n{version_block}\n\n"
+        f"A hardcoded color (rgba with white fallback, white, etc.) is invisible "
+        f"on light themes because HA's light-mode header background is also light."
     )
-    assert version_block_match is not None, "Could not find .version rule in styles.ts"
-    version_block = version_block_match.group(1)
 
-    # The color line MUST use var() WITH a fallback value
-    has_fallback_color = bool(re.search(
-        r"var\(--rgb-text-primary-color\s*,\s*255\s*,\s*255\s*,\s*255\s*\)",
-        version_block,
-    ))
-
-    # It must NOT use the old form without fallback (undetectable text)
-    has_no_fallback = bool(re.search(
-        r"var\(--rgb-text-primary-color\)",
-        version_block,
-    ))
-
-    assert has_fallback_color, (
-        ".version rule is missing the var(... 255, 255, 255) fallback. "
-        f"Found color-related line(s) in block:\n{version_block}"
+    # Negative checks: should NOT have hardcoded white
+    assert "255, 255, 255" not in version_block, (
+        f".version CSS still has a hardcoded white color. Use 'color: inherit' instead."
     )
-    assert not has_no_fallback, (
-        ".version rule uses var(--rgb-text-primary-color) WITHOUT a fallback. "
-        "Add the fallback triple: var(--rgb-text-primary-color, 255, 255, 255)"
+    assert "--rgb-text-primary-color" not in version_block, (
+        f".version CSS still uses --rgb-text-primary-color which doesn't adapt to HA themes. Use 'color: inherit'."
     )
 
     # Also verify white-space: nowrap is present to prevent wrapping
